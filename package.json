@@ -1,0 +1,22 @@
+{
+  "name": "netflix-login",
+  "version": "1.0.0",
+  "description": "Login in to Netflix and provide cookies",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/johnf/netflix-login-node.git"
+  },
+  "keywords": [
+    "netflix"
+  ],
+  "author": "John Ferlito <johnf@inodes.org> (http://inodes.org)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/johnf/netflix-login-node/issues"
+  },
+  "homepage": "https://github.com/johnf/netflix-login-node#readme"
+}
