@@ -14,7 +14,7 @@
     "netflix"
   ],
   "author": "John Ferlito <johnf@inodes.org> (http://inodes.org)",
-  "license": "MIT",
+  "license": "ISC",
   "bugs": {
     "url": "https://github.com/johnf/netflix-login-node/issues"
   },
