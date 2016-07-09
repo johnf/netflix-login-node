@@ -3,8 +3,18 @@
   "version": "1.0.0",
   "description": "Login in to Netflix and provide cookies",
   "main": "index.js",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "purdy": "^2.2.0",
+    "request-promise": "^3.0.0"
+  },
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "mocha": "^2.5.3",
+    "nock": "^8.0.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
