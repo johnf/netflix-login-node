@@ -1,6 +1,6 @@
 {
   "name": "netflix-login",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Login in to Netflix and provide cookies",
   "main": "index.js",
   "dependencies": {
