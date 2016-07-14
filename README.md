@@ -1,7 +1,7 @@
 # Netflix Login
 
-[![Circle CI](https://circleci.com/gh/johnf/green_eye_monitor.svg?style=svg)](https://circleci.com/gh/johnf/green_eye_monitor)
-[![Coverage Status](https://coveralls.io/repos/johnf/green_eye_monitor/badge.svg?branch=master&service=github)](https://coveralls.io/github/johnf/green_eye_monitor?branch=master)
+[![Circle CI](https://circleci.com/gh/johnf/netflix-login-node.svg?style=svg)](https://circleci.com/gh/johnf/netflix-login-node)
+[![Coverage Status](https://coveralls.io/repos/johnf/netflix-login-node/badge.svg?branch=master&service=github)](https://coveralls.io/github/johnf/netflix-login-node?branch=master)
 
 Login in to Netflix and provide cookies.
 
