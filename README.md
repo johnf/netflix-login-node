@@ -5,6 +5,10 @@
 
 Login in to Netflix and provide cookies.
 
+## Usage Notes
+
+Please read the [Netflix Terms of Use](https://help.netflix.com/legal/termsofuse?locale=en&docType=termsofuse) before using this module.
+
 ## Installation
 
 ``` bash
