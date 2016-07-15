@@ -60,9 +60,9 @@ describe('Netflix Login', function() {
     it('should login successfuly', function() {
       return netflixLogin.login('johnf@inodes.org', 'secret').then(function(data) {
         expect(data).to.be.a('object');
-        expect(data).to.have.property('netflixId').equal('ct%netflixCookie');
-        expect(data).to.have.property('secureNetflixId').equal('v%netflixCookie');
-        expect(data).to.have.property('esn').equal('NFCDIE-ESN');
+        expect(data).to.have.property('netflixId').equal(netflixId);
+        expect(data).to.have.property('secureNetflixId').equal(secureNetflixId);
+        expect(data).to.have.property('esn').equal(esn);
       });
     });
   });
