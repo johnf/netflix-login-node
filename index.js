@@ -15,14 +15,14 @@ module.exports = {
   login: function(email, password) {
     var self = this;
 
-    return self.getAuthURL().then(function(authURL) {
-      return self.postLogin(authURL, email, password);
+    return self._getAuthURL().then(function(authURL) {
+      return self._postLogin(authURL, email, password);
     }).then(function(location) {
-      return self.getLogin(location);
+      return self._getLogin(location);
     });
   },
 
-  getAuthURL: function() {
+  _getAuthURL: function() {
     var options = {
       uri: 'https://www.netflix.com/Login',
       headers: this.headers,
@@ -39,7 +39,7 @@ module.exports = {
     });
   },
 
-  postLogin: function(authURL, email, password) {
+  _postLogin: function(authURL, email, password) {
     var options = {
       method: 'POST',
       uri: 'https://www.netflix.com/Login',
@@ -74,7 +74,7 @@ module.exports = {
     });
   },
 
-  getLogin: function(location) {
+  _getLogin: function(location) {
     var self = this;
 
     var options = {
