@@ -24,8 +24,55 @@ module.exports = {
     });
   },
 
+  expired: function() {
+    var result = false;
+
+    if (this._cookiesMissing()) {
+      return true;
+    }
+
+    var cookies = this._cookies();
+    console.log(cookies);
+    for(let cookie of cookies) {
+      if (cookie.key !== 'NetflixId' && cookie.key !== 'SecureNetflixId') {
+        continue;
+      }
+      if (cookie.TTL() === 0) {
+        result = true;
+      }
+    }
+
+    return result;
+  },
+
+  _cookiesMissing: function() {
+    var result = 0;
+
+    var cookies = this._cookies();
+    for(let cookie of cookies) {
+      if (cookie.key === 'NetflixId' || cookie.key === 'SecureNetflixId') {
+        result++;
+      }
+    }
+
+    if (result === 2) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  },
+
+  _cookieJar: function() {
+    return baseOptions.jar;
+  },
+
   _cookies: function() {
     return this._cookieJar().getCookies(baseOptions.uri);
+  },
+
+  _reset: function() {
+    baseOptions.jar = request.jar();
   },
 
   _getAuthURL: function() {

@@ -59,7 +59,13 @@ nock('https://www.netflix.com')
   .get('/browse')
   .reply(200, '"esn":"' + esn + '"');
 
+
 describe('Netflix Login', function() {
+
+  beforeEach(function resetNetflix() {
+    netflixLogin._reset();
+  });
+
   describe('#login()', function() {
     it('should login successfuly', function() {
       return netflixLogin.login('johnf@inodes.org', 'secret').then(function(data) {
@@ -68,6 +74,13 @@ describe('Netflix Login', function() {
         expect(data).to.have.property('secureNetflixId').equal(secureNetflixId);
         expect(data).to.have.property('esn').equal(esn);
       });
+    });
+  });
+
+  describe('#expired()', function() {
+    it('should return true if no cookies', function() {
+      var expired = netflixLogin.expired();
+      expect(expired).to.equal(true);
     });
   });
 });
