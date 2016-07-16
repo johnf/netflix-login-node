@@ -5,13 +5,15 @@ var request = require('request-promise');
 var Purdy = require('purdy');
 var debug = require('debug')('netflix-login');
 
-module.exports = {
+var baseOptions = {
+  uri: 'https://www.netflix.com/Login',
   headers: {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586',
   },
+  jar: request.jar()
+};
 
-  cookieJar: request.jar(),
-
+module.exports = {
   login: function(email, password) {
     var self = this;
 
@@ -22,14 +24,12 @@ module.exports = {
     });
   },
 
-  _getAuthURL: function() {
-    var options = {
-      uri: 'https://www.netflix.com/Login',
-      headers: this.headers,
-      jar: this.cookieJar,
-    };
+  _cookies: function() {
+    return this._cookieJar().getCookies(baseOptions.uri);
+  },
 
-    return request(options).then(function (body) {
+  _getAuthURL: function() {
+    return request(baseOptions).then(function (body) {
       var authURL = body.match(/name="authURL" value="(.+?)"/)[1];
       debug('authURL: ' + authURL);
 
@@ -42,7 +42,6 @@ module.exports = {
   _postLogin: function(authURL, email, password) {
     var options = {
       method: 'POST',
-      uri: 'https://www.netflix.com/Login',
       simple: false,
       resolveWithFullResponse: true,
       form: {
@@ -54,11 +53,11 @@ module.exports = {
         mode: 'login',
         action: 'loginAction',
         withFields: 'email,password,rememberMe,nextPage',
-        nextPage: '',
+        nextPage: ''
       },
-      headers: this.headers,
-      jar: this.cookieJar,
     };
+
+    Object.assign(options, baseOptions);
 
     return request(options).then(function (response) {
       if (response.statusCode !== 302) {
@@ -77,15 +76,11 @@ module.exports = {
   _getLogin: function(location) {
     var self = this;
 
-    var options = {
-      uri: 'https://www.netflix.com/Login',
-      headers: this.headers,
-      jar: this.cookieJar,
-    };
-
-    return request(options).then(function (body) {
-      var cookies = self.cookieJar.getCookies(options.uri);
-      var authData = {};
+    return request(baseOptions).then(function (body) {
+      var cookies = self._cookies();
+      var authData = {
+        cookieJar: self._cookieJar()
+      };
 
       for(let cookie of cookies) {
         if (cookie.key === 'NetflixId') {
@@ -102,7 +97,7 @@ module.exports = {
 
       return authData;
     }).catch(function (err) {
-      throw new Error('netflix-login: getLogin failed ' + err);
+      throw new Error('netflix-login: getLogin failed ' + err.stack);
     });
   },
 };

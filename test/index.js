@@ -1,7 +1,11 @@
+"use strict";
+
 var expect = require('chai').expect;
 var nock = require('nock');
 
 var netflixLogin = require('../index');
+
+var Purdy = require('purdy');
 
 // Setup nock
 nock.disableNetConnect();
@@ -59,7 +63,7 @@ describe('Netflix Login', function() {
   describe('#login()', function() {
     it('should login successfuly', function() {
       return netflixLogin.login('johnf@inodes.org', 'secret').then(function(data) {
-        expect(data).to.be.a('object');
+        expect(data).to.be.an('object');
         expect(data).to.have.property('netflixId').equal(netflixId);
         expect(data).to.have.property('secureNetflixId').equal(secureNetflixId);
         expect(data).to.have.property('esn').equal(esn);
