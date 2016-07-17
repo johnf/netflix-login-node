@@ -3,7 +3,7 @@
 [![Circle CI](https://circleci.com/gh/johnf/netflix-login-node.svg?style=svg)](https://circleci.com/gh/johnf/netflix-login-node)
 [![Coverage Status](https://coveralls.io/repos/johnf/netflix-login-node/badge.svg?branch=master&service=github)](https://coveralls.io/github/johnf/netflix-login-node?branch=master)
 
-Login in to Netflix and provide cookies.
+Login in to Netflix and provide cookies and encryption keys.
 
 ## Usage Notes
 
@@ -22,14 +22,9 @@ npm install netflix-login
 var username = 'johnf@inodes.org';
 var password = 'secret';
 
-netflixLogin.login(username, password).then(function(data) {
-  // data will contain
-  {
-    netflixId: 'netflixCookie',
-    secureNetflixId: 'secureNetflixCookie',
-    esn: 'ESN'
-  }
-};
+netflixLogin.login(username, password).then(function(authData) {
+  var crypto = netflixCrypto.fetchCryptoKeys(authData, options);
+});
 ```
 
 ## Development

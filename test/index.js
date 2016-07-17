@@ -9,6 +9,8 @@ var Purdy = require('purdy');
 
 // Setup nock
 nock.disableNetConnect();
+// nock.enableNetConnect();
+// nock.recorder.rec();
 
 var username = 'johnf@inodes.org';
 var password = 'secret';
@@ -17,12 +19,16 @@ var netflixId = 'netflixCookie';
 var secureNetflixId = 'secureNetflixCookie';
 var esn = 'ESN';
 
+var nockOptions = {
+  allowUnmocked: false
+};
+
 // getAuthURL
-nock('https://www.netflix.com')
+nock('https://www.netflix.com', nockOptions)
   .get('/Login')
   .reply(302, '', { location: 'https://www.netflix.com/gb/Login' });
 
-nock('https://www.netflix.com')
+nock('https://www.netflix.com', nockOptions)
   .get('/gb/Login')
   .reply(200, 'name="authURL" value="' + authURL + '"');
 
@@ -47,18 +53,17 @@ nock('https://www.netflix.com')
   });
 
 // getLogin
-nock('https://www.netflix.com')
+nock('https://www.netflix.com', nockOptions)
   .get('/Login')
   .reply(302, '', { location: 'https://www.netflix.com/gb/Login' });
 
-nock('https://www.netflix.com')
+nock('https://www.netflix.com', nockOptions)
   .get('/gb/Login')
   .reply(302, '', { location: 'https://www.netflix.com/browse', });
 
-nock('https://www.netflix.com')
+nock('https://www.netflix.com', nockOptions)
   .get('/browse')
   .reply(200, '"esn":"' + esn + '"');
-
 
 describe('Netflix Login', function() {
 

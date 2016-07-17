@@ -1,26 +1,44 @@
 "use strict";
 
+var fs = require('fs');
 var request = require('request-promise');
+var tough = require('tough-cookie');
 
 var Purdy = require('purdy');
 var debug = require('debug')('netflix-login');
 
-var baseOptions = {
-  uri: 'https://www.netflix.com/Login',
-  headers: {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586',
-  },
-  jar: request.jar()
-};
 
 module.exports = {
-  login: function(email, password) {
+  _baseOptions: {
+    uri: 'https://www.netflix.com/Login',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586',
+    },
+    jar: request.jar()
+  },
+
+  _authDataFilename: 'authData.json',
+
+  login: function(email, password, options) {
     var self = this;
+
+    options = options || {};
+
+    if (options.useCache && fs.existsSync(self._authDataFilename)) {
+      return self._loadFromCache();
+    }
 
     return self._getAuthURL().then(function(authURL) {
       return self._postLogin(authURL, email, password);
     }).then(function(location) {
       return self._getLogin(location);
+    }).then(function(authData) {
+      if (options.useCache) {
+        return self._saveToCache(authData);
+      }
+      else {
+        return authData;
+      }
     });
   },
 
@@ -45,6 +63,51 @@ module.exports = {
     return result;
   },
 
+  _saveToCache: function(authData) {
+    debug('saving to cache');
+
+    var self = this;
+
+    var data = {
+      cookieJSON: authData.cookieJar._jar.toJSON(),
+      esn: authData.esn
+    };
+    var dataJSON = JSON.stringify(data);
+
+    return new Promise(function(resolve, reject) {
+      fs.writeFile(self._authDataFilename, dataJSON, function(err) {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(authData);
+      });
+    });
+  },
+
+  _loadFromCache: function() {
+    debug('loading from cache');
+    var self = this;
+
+    return new Promise(function(resolve, reject) {
+      fs.readFile(self._authDataFilename, function(err, dataJSON) {
+        if (err) {
+          return reject(err);
+        }
+
+        var data = JSON.parse(dataJSON);
+
+        var cookieJar = new tough.CookieJar.fromJSON(data.cookieJSON);
+        var authData = {
+          cookieJar: request.jar(cookieJar.store),
+          esn: data.esn
+        };
+
+        resolve(authData);
+      });
+    });
+  },
+
   _cookiesMissing: function() {
     var result = 0;
 
@@ -64,19 +127,19 @@ module.exports = {
   },
 
   _cookieJar: function() {
-    return baseOptions.jar;
+    return this._baseOptions.jar;
   },
 
   _cookies: function() {
-    return this._cookieJar().getCookies(baseOptions.uri);
+    return this._cookieJar().getCookies(this._baseOptions.uri);
   },
 
   _reset: function() {
-    baseOptions.jar = request.jar();
+    this._baseOptions.jar = request.jar();
   },
 
   _getAuthURL: function() {
-    return request(baseOptions).then(function (body) {
+    return request(this._baseOptions).then(function (body) {
       var authURL = body.match(/name="authURL" value="(.+?)"/)[1];
       debug('authURL: ' + authURL);
 
@@ -87,7 +150,7 @@ module.exports = {
   },
 
   _postLogin: function(authURL, email, password) {
-    var options = {
+    var myOptions = {
       method: 'POST',
       simple: false,
       resolveWithFullResponse: true,
@@ -104,7 +167,7 @@ module.exports = {
       },
     };
 
-    Object.assign(options, baseOptions);
+    var options = Object.assign({}, this._baseOptions, myOptions);
 
     return request(options).then(function (response) {
       if (response.statusCode !== 302) {
@@ -123,7 +186,7 @@ module.exports = {
   _getLogin: function(location) {
     var self = this;
 
-    return request(baseOptions).then(function (body) {
+    return request(this._baseOptions).then(function (body) {
       var cookies = self._cookies();
       var authData = {
         cookieJar: self._cookieJar()
