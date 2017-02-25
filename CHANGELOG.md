@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 - 2017-02-25
+
+* dist dir was missing (@johnf)
+
 ## 1.0.0 - 2017-02-25
 
 * Convert to ES6 (@johnf)
