@@ -53,5 +53,5 @@
     "test": "mocha --compilers js:babel-core/register",
     "version": "vi CHANGELOG.md && git add CHANGELOG.md"
   },
-  "version": "0.0.3"
+  "version": "1.0.0"
 }

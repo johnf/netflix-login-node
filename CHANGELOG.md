@@ -1,6 +1,6 @@
 # Changelog
 
-## Next - 2017-02-25
+## 1.0.0 - 2017-02-25
 
 * Convert to ES6 (@johnf)
 
