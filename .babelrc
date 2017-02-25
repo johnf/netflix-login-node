@@ -1,0 +1,10 @@
+{
+  "presets": ["latest"],
+  "plugins": [
+    "add-module-exports",
+    "transform-class-properties",
+    "syntax-function-bind",
+    "transform-function-bind",
+    "transform-object-rest-spread"
+  ]
+}

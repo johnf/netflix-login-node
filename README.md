@@ -19,19 +19,36 @@ npm install netflix-login
 
 ``` javascript
 
-var username = 'johnf@inodes.org';
-var password = 'secret';
+import netflixLogin from 'netflix-login/login';
+import netflixCrypto from 'netflix-login/crypto';
 
-netflixLogin.login(username, password).then(function(authData) {
-  var crypto = netflixCrypto.fetchCryptoKeys(authData, options);
-});
+const options = {
+  useCache: true,
+  cachePath: 'tmp',
+};
+const username = 'johnf@inodes.org';
+const password = 'secret';
+
+netflixLogin.login(username, password, options)
+  .then(authData => netflixCrypto.fetchCryptoKeys(authData, options))
+  .then(data => console.error(data))
+  .catch((error) => {
+    console.error('ERROR');
+    console.error(error);
+  });
 ```
 
 ## Development
 
 After checking out the repo, run `npm test` to run the tests.
 
-To release a new version, update the version number in `package.json`, and then run `npm version major|minor`, which will create a git tag for the version, push git commits and tags. Finally run `npm publish` ro push the modulfe file to [npmjs.com](https://npmjs.com).
+To release a new version:
+
+* npm test
+* npm version major|minor|patch
+* npm publish
+
+This will run the tests, update the version, create a git tag for the version, push git commits and tags. Publish the module file to [npmjs.com](https://npmjs.com).
 
 ## Contributing
 

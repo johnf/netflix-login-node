@@ -1,9 +1,13 @@
 # Changelog
 
+## Next - 2017-02-25
+
+* Convert to ES6 (@johnf)
+
 ## 0.0.4
 
-* Cache credentials to file for reuse
-* Generate crypto keys
+* Cache credentials to file for reuse (@johnf)
+* Generate crypto keys (@johnf)
 
 ## 0.0.3
 
