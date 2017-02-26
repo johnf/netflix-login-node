@@ -403,17 +403,17 @@ const sendSecondManifest = (requestOptions, cryptoKeys) => {
   };
   const firstBodyJSON = JSON.stringify(firstBody);
 
-  const uiPlayContext = {
-    row: -97,
-    rank: -97,
-    location: 'WATCHNOW',
-    request_id: '2f4d7448-a81f-46a3-b90e-77150ea9e3ec',
-  };
-  const uiPlayContextJSON = JSON.stringify(uiPlayContext);
+  // const uiPlayContext = {
+  //   row: -97,
+  //   rank: -97,
+  //   location: 'WATCHNOW',
+  //   request_id: '2f4d7448-a81f-46a3-b90e-77150ea9e3ec',
+  // };
+  // const uiPlayContextJSON = JSON.stringify(uiPlayContext);
 
   const subData = {
     method: 'manifest',
-    lookupType: 'STANDARD',
+    lookupType: 'PREPARE',
     viewableIds: [80018191],
     profiles: [
       'playready-h264mpl30-dash',
@@ -433,16 +433,19 @@ const sendSecondManifest = (requestOptions, cryptoKeys) => {
     appId: '146694622769522927',
     sessionParams: {
       pinCapableClient: 'false',
-      uiplaycontext: uiPlayContextJSON,
+      uiplaycontext: null, // uiPlayContextJSON,
     },
-    sessionId: '14669462273748950',
+    sessionId: '14880682902052',  // time_t * 10000
     trackId: 0,
-    flavor: 'STANDARD',
+    flavor: 'PRE_FETCH',
     secureUrls: true,
     supportPreviewContent: true,
     forceClearStreams: false,
-    languages: ['en-US'],
-    clientVersion: '4.0004.857.011',
+    validatePinProtection: false,
+    usePlayReadyHeaderObject: false,
+    showAllSubDubTracks: false,
+    languages: ['en-AU'],
+    clientVersion: '4.0006.237.011',
     uiVersion: 'akira',
   };
   const subDataJSON = JSON.stringify(subData);
@@ -451,7 +454,7 @@ const sendSecondManifest = (requestOptions, cryptoKeys) => {
     {},
     {
       headers: {},
-      path: '/cbp/cadmium-4',
+      path: '/cbp/cadmium-13',
       payload: {
         data: subDataJSON,
       },
