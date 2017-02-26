@@ -613,7 +613,6 @@ export const fetchCryptoKeys = (authData, options = {}) => {
     return sendSecondManifest(requestOptions, cryptoKeys);
   })
   .then((responseJSON) => {
-    console.error(responseJSON);
     const myResponseJSON = responseJSON.replace(/^{/, '').replace(/}$/, '');
     let parts = myResponseJSON.split(/}{/);
     parts = parts.map(part => `{${part}}`);
@@ -626,14 +625,11 @@ export const fetchCryptoKeys = (authData, options = {}) => {
     return processSecondManifestResponse(header, cryptoKeys);
   })
   .then((data) => {
-    console.error('MOO');
-    console.error(data);
     cryptoKeys = {
       ...cryptoKeys,
       ...data,
     };
 
-    console.error(cryptoKeys);
     if (options.useCache) {
       saveToCache(cryptoDataFilename, cryptoKeys);
     }
