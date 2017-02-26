@@ -4,6 +4,9 @@ import request from 'request-promise';
 import zlib from 'zlib';
 import Debug from 'debug';
 import Purdy from 'purdy';
+import util from 'util';
+
+util.inspect.defaultOptions.depth = null;
 
 const debug = Debug('netflix-login:crypto');
 
@@ -34,7 +37,7 @@ const encrypt = (cleartext, keys) => {
   };
 };
 
-const decrypt = (ciphertext64, iv64, keys) => {
+export const decrypt = (ciphertext64, iv64, keys) => {
   debug('encrypt json');
 
   const algorithm = keys.encryptionKey.algorithm;
@@ -52,7 +55,7 @@ const decrypt = (ciphertext64, iv64, keys) => {
   return decrypted;
 };
 
-const sign = (text2sign, keys) => {
+export const sign = (text2sign, keys) => {
   debug('sign');
 
   const algorithm = keys.hmacKey.algorithm;
@@ -137,14 +140,16 @@ const saveToCache = (filename, cryptoKeys) => {
   const rsaPrivateKeyPem = forge.pki.privateKeyToPem(cryptoKeys.rsaKeyPair.privateKey);
 
   const data = {
+    ...cryptoKeys,
     rsaPublicKeyPemStripped: cryptoKeys.rsaKeyPair.publicKeyPem,
     rsaPublicKeyPem,
     rsaPrivateKeyPem,
-    mastertoken: cryptoKeys.mastertoken,
-    mastertoken64: cryptoKeys.mastertoken64,
-    keydata: cryptoKeys.keydata,
-    keys: cryptoKeys.keys,
   };
+
+  delete data.rsaKeyPair;
+  delete data.netflixPublicKey;
+  delete data.authData;
+
   const dataJSON = JSON.stringify(data);
 
   fs.writeFileSync(filename, dataJSON);
@@ -156,19 +161,20 @@ const loadFromCache = (filename) => {
   const dataJSON = fs.readFileSync(filename);
   const data = JSON.parse(dataJSON);
 
-  const rsaPublicKey = forge.pki.publicKeyFromPem(data.rsaPublicKeyPem);
-  const rsaPrivateKey = forge.pki.privateKeyFromPem(data.rsaPrivateKeyPem);
+  const publicKey = forge.pki.publicKeyFromPem(data.rsaPublicKeyPem);
+  const privateKey = forge.pki.privateKeyFromPem(data.rsaPrivateKeyPem);
+  const publicKeyPem = data.rsaPublicKeyPemStripped;
+  delete data.rsaPublicKeyPem;
+  delete data.rsaPrivateKeyPem;
+  delete data.rsaPublicKeyPemStripped;
 
   return {
+    ...data,
     rsaKeyPair: {
-      publicKey: rsaPublicKey,
-      privateKey: rsaPrivateKey,
-      publicKeyPem: data.rsaPublicKeyPemStripped,
+      publicKey,
+      privateKey,
+      publicKeyPem,
     },
-    mastertoken: data.mastertoken,
-    mastertoken64: data.mastertoken64,
-    keydata: data.keydata,
-    keys: data.keys,
   };
 };
 
@@ -271,7 +277,6 @@ const sendFirstManifest = (requestOptions, cryptoKeys) => {
   };
   const secondBodyJSON = JSON.stringify(secondBody);
 
-
   const bodyJSON = firstBodyJSON + secondBodyJSON;
 
   const options = {
@@ -324,12 +329,12 @@ const processFirstManifestResponse = (response, cryptoKeys) => {
   const headerdataJSON = forge.util.decode64(response.headerdata);
   const headerdata = JSON.parse(headerdataJSON);
 
-  // TODO: Verify the mastertoken signature
   const keydata = headerdata.keyresponsedata.keydata;
 
   const encryptionKey = unwrapKey(keydata.encryptionkey, cryptoKeys);
   const hmacKey = unwrapKey(keydata.hmackey, cryptoKeys);
 
+  // TODO: Verify the mastertoken signature
   const mastertokenJSON = forge.util.decode64(headerdata.keyresponsedata.mastertoken.tokendata);
   const mastertoken = JSON.parse(mastertokenJSON);
 
@@ -556,83 +561,83 @@ const processSecondManifestResponse = (response, cryptoKeys) => {
   };
 };
 
-class Crypto {
-  static fetchCryptoKeys(authData, options = {}) {
-    debug('fetching crypto keys');
+export const fetchCryptoKeys = (authData, options = {}) => {
+  debug('fetching crypto keys');
 
-    let cryptoKeys = {};
-    const cryptoDataFilename = `${options.cachePath}/cryptoData.json`;
+  let cryptoKeys = {};
+  const cryptoDataFilename = `${options.cachePath}/cryptoData.json`;
 
-    const requestOptions = {
-      method: 'POST',
-      uri: 'https://www.netflix.com/api/msl/NFCDCH-LX-/cadmium/manifest',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36',
-      },
-      jar: authData.cookieJar,
+  const requestOptions = {
+    method: 'POST',
+    uri: 'https://www.netflix.com/api/msl/NFCDCH-LX-/cadmium/manifest',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3004.3 Safari/537.36',
+    },
+    jar: authData.cookieJar,
+  };
+
+  debug(authData);
+
+  cryptoKeys.netflixPublicKey = importNetflixKey();
+  cryptoKeys.authData = authData;
+
+  if (options.useCache && fs.existsSync(cryptoDataFilename)) {
+    const cryptoData = loadFromCache(cryptoDataFilename);
+    return {
+      ...cryptoKeys,
+      ...cryptoData,
+    };
+  }
+
+  return generateRSAKeyPair()
+    .then((rsaKeyPair) => {
+      cryptoKeys.rsaKeyPair = rsaKeyPair;
+      debug(cryptoKeys);
+      return sendFirstManifest(requestOptions, cryptoKeys);
+    })
+  .then((responseJSON) => {
+    const response = JSON.parse(responseJSON);
+
+    verifyFirstManifest(response, cryptoKeys);
+    return processFirstManifestResponse(response, cryptoKeys);
+  })
+  .then((data) => {
+    cryptoKeys = {
+      ...cryptoKeys,
+      ...data,
     };
 
-    debug(authData);
+    return sendSecondManifest(requestOptions, cryptoKeys);
+  })
+  .then((responseJSON) => {
+    console.error(responseJSON);
+    const myResponseJSON = responseJSON.replace(/^{/, '').replace(/}$/, '');
+    let parts = myResponseJSON.split(/}{/);
+    parts = parts.map(part => `{${part}}`);
 
-    cryptoKeys.netflixPublicKey = importNetflixKey();
-    cryptoKeys.authData = authData;
+    const header = JSON.parse(parts[0]);
+    // FIXME why do we ignore the payload?
+    // const payload = JSON.parse(parts[1]);
 
-    if (options.useCache && fs.existsSync(cryptoDataFilename)) {
-      const cryptoData = loadFromCache(cryptoDataFilename);
-      return {
-        ...cryptoKeys,
-        ...cryptoData,
-      };
+    verifySecondManifest(header, cryptoKeys);
+    return processSecondManifestResponse(header, cryptoKeys);
+  })
+  .then((data) => {
+    console.error('MOO');
+    console.error(data);
+    cryptoKeys = {
+      ...cryptoKeys,
+      ...data,
+    };
+
+    console.error(cryptoKeys);
+    if (options.useCache) {
+      saveToCache(cryptoDataFilename, cryptoKeys);
     }
 
-    return generateRSAKeyPair()
-      .then((rsaKeyPair) => {
-        cryptoKeys.rsaKeyPair = rsaKeyPair;
-        debug(cryptoKeys);
-        return sendFirstManifest(requestOptions, cryptoKeys);
-      })
-      .then((responseJSON) => {
-        const response = JSON.parse(responseJSON);
-
-        verifyFirstManifest(response, cryptoKeys);
-        return processFirstManifestResponse(response, cryptoKeys);
-      })
-      .then((data) => {
-        cryptoKeys = {
-          ...cryptoKeys,
-          ...data,
-        };
-
-        return sendSecondManifest(requestOptions, cryptoKeys);
-      })
-      .then((responseJSON) => {
-        const myResponseJSON = responseJSON.replace(/^{/, '').replace(/}$/, '');
-        let parts = myResponseJSON.split(/}{/);
-        parts = parts.map(part => `{${part}}`);
-
-        const header = JSON.parse(parts[0]);
-        // FIXME why do we ignore the payload?
-        // const payload = JSON.parse(parts[1]);
-
-        verifySecondManifest(header, cryptoKeys);
-        return processSecondManifestResponse(header, cryptoKeys);
-      })
-      .then((data) => {
-        cryptoKeys = {
-          ...cryptoKeys,
-          ...data,
-        };
-
-        if (options.useCache) {
-          saveToCache(cryptoDataFilename, cryptoKeys);
-        }
-
-        return cryptoKeys;
-      })
-      .catch((error) => {
-        console.error(error.stack);
-      });
-  }
-}
-
-export default Crypto;
+    return cryptoKeys;
+  })
+  .catch((error) => {
+    console.error(error.stack);
+  });
+};
