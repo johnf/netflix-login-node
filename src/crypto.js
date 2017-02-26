@@ -16,7 +16,7 @@ const encrypt = (cleartext, keys) => {
   debug('encrypt');
 
   const algorithm = keys.encryptionKey.algorithm;
-  const key = keys.encryptionKey.key;
+  const key = forge.util.decode64(keys.encryptionKey.key64);
   const iv = forge.random.getBytesSync(16);
 
   const buffer = forge.util.createBuffer(cleartext);
@@ -41,7 +41,7 @@ export const decrypt = (ciphertext64, iv64, keys) => {
   debug('encrypt json');
 
   const algorithm = keys.encryptionKey.algorithm;
-  const key = keys.encryptionKey.key;
+  const key = forge.util.decode64(keys.encryptionKey.key64);
   const iv = forge.util.decode64(iv64);
   const ciphertext = forge.util.decode64(ciphertext64);
 
@@ -59,7 +59,7 @@ export const sign = (text2sign, keys) => {
   debug('sign');
 
   const algorithm = keys.hmacKey.algorithm;
-  const key = keys.hmacKey.key;
+  const key = forge.util.decode64(keys.hmacKey.key64);
 
   const hmac = forge.hmac.create();
   hmac.start(algorithm, key);
@@ -333,6 +333,10 @@ const processFirstManifestResponse = (response, cryptoKeys) => {
 
   const encryptionKey = unwrapKey(keydata.encryptionkey, cryptoKeys);
   const hmacKey = unwrapKey(keydata.hmackey, cryptoKeys);
+  encryptionKey.key64 = forge.util.encode64(encryptionKey.key);
+  delete encryptionKey.key;
+  hmacKey.key64 = forge.util.encode64(hmacKey.key);
+  delete hmacKey.key;
 
   // TODO: Verify the mastertoken signature
   const mastertokenJSON = forge.util.decode64(headerdata.keyresponsedata.mastertoken.tokendata);
