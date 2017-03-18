@@ -47,6 +47,7 @@
   },
   "scripts": {
     "build": "webpack -p",
+    "watch": "webpack --progress --colors --watch",
     "lint": "eslint .",
     "prepublish": "npm run build",
     "postversion": "git push",

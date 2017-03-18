@@ -12,7 +12,7 @@ const debug = Debug('netflix-login:crypto');
 
 const netflixPublicKey64 = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlibeiUhffUDs6QqZiB+jXH/MNgITf7OOcMzuSv4G3JysWkc0aPbT3vkCVaxdjNtw50zo2Si8I24z3/ggS3wZaF//lJ/jgA70siIL6J8kBt8zy3x+tup4Dc0QZH0k1oxzQxM90  FB5x+UP0hORqQEUYZCGZ9RbZ/WNV70TAmFkjmckutWN9DtR6WUdAQWr0HxsxI9R05nz5qU2530AfQ95h+WGZqnRoG0W6xO1X05scyscNQg0PNCy3nfKBG+E6uIl5JB4dpc9cgSNgkfAIeuPURhpD0jHkJ/+4ytpdsXAGmwYmoJcCSE1TJyYYoExuoaE8gLFeM01xXK5VIN  U7/eWjQIDAQAB'; // eslint-disable-line max-len
 
-const encrypt = (cleartext, keys) => {
+export const encrypt = (cleartext, keys) => {
   debug('encrypt');
 
   const algorithm = keys.encryptionKey.algorithm;
