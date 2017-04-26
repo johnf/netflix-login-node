@@ -644,3 +644,5 @@ export const fetchCryptoKeys = (authData, options = {}) => {
     console.error(error.stack);
   });
 };
+
+export default { fetchCryptoKeys };
